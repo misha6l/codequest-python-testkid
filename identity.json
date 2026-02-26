@@ -1,0 +1,16 @@
+{
+  "name": "TestKid",
+  "username": "testkid",
+  "theme": "spongebob",
+  "avatar": "🧽",
+  "track": "python",
+  "level": 1,
+  "xp": 150,
+  "streak": 1,
+  "lastActive": "2026-02-26",
+  "currentMission": "python-mission-2",
+  "completedMissions": ["python-mission-1"],
+  "badges": ["🧮 Calculator Kid"],
+  "hintsUsed": 0,
+  "attempts": {"python-mission-1": 1}
+}

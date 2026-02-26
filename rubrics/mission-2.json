@@ -1,0 +1,14 @@
+{
+  "missionId": "python-mission-2",
+  "title": "The Loop-de-Loop Machine",
+  "requirements": [
+    "Uses a for loop",
+    "Uses an if statement inside the loop",
+    "Defines at least one function with def",
+    "Uses print() to display output",
+    "Script has at least 10 lines of code"
+  ],
+  "xpReward": 200,
+  "badge": "🔮 Loop Lord",
+  "unlocks": "python-mission-3"
+}
