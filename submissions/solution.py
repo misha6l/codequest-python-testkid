@@ -1,13 +1,8 @@
 # 🌀 Mission 2: The Loop-de-Loop Machine
-# Sandy Cheeks needs your help! Write your Python code below.
-# When you're done, save this file and push it to GitHub.
-# The AI reviewer will check your code automatically!
 
-# YOUR CODE GOES HERE:
-# My code
-#test2
-#test3
-#test4
+# Sandy needs a loop to power the machine!
+# This loop runs 5 times to satisfy the requirement
+for i in range(1, 6):
+    print(f"Loop-de-loop {i}: Machine is spinning!")
 
-x = 5
-print(x)
+print("Yee-haw! The machine is fully powered!")
