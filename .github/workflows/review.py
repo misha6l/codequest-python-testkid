@@ -47,7 +47,7 @@ payload = json.dumps({
     "generationConfig": {"temperature": 0.3}
 }).encode()
 
-url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}"
 req = urllib.request.Request(url, data=payload, method="POST",
     headers={"Content-Type": "application/json"})
 
