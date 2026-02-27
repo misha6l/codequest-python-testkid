@@ -2,4 +2,7 @@
 # It doesn't use functions or if statements!
 # hi
 
-print("hi)
+x = 10
+if x > 5:
+    for i in range(3):
+        print("Looping")
