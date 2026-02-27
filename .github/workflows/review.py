@@ -2,6 +2,7 @@ import json
 import os
 import urllib.request
 import urllib.error
+import py_compile
 
 def run_review():
     # --- 1. Load Data ---
@@ -16,57 +17,65 @@ def run_review():
         print(f"File loading error: {e}")
         return
 
-    # --- 2. Setup Tokens ---
+    # --- 2. PRE-CHECK: Syntax Validation ---
+    # This catches colons and typos that the AI might ignore
+    syntax_passed = True
+    syntax_error_msg = ""
+    try:
+        py_compile.compile("submissions/solution.py", doraise=True)
+    except py_compile.PyCompileError as e:
+        syntax_passed = False
+        syntax_error_msg = str(e).split(':', 1)[-1].strip()
+
+    # --- 3. Setup AI Tokens ---
     ai_token = os.environ.get("AI_TOKEN") 
     gh_token = os.environ.get("GH_TOKEN")
-    
     url = "https://models.inference.ai.azure.com/chat/completions"
     model_id = "gpt-4o-mini" 
 
-    # --- 3. Ironclad Prompting ---
-    # We explicitly define that these are PASS criteria to prevent the AI from 
-    # thinking an 'if' statement is a violation.
-    prompt = (
-        f"You are a strict technical reviewer. Evaluate the following Python code "
-        f"against these MANDATORY PASS CRITERIA: {rubric['requirements']}.\n\n"
-        f"STUDENT CODE:\n{code}\n\n"
-        "EVALUATION RULES:\n"
-        "1. For each criterion, check if it is explicitly present in the code.\n"
-        "2. If it is present, 'pass' is true. If missing, 'pass' is false.\n"
-        "3. Do NOT invent negative constraints. If a rule says 'Uses an if statement', "
-        "having one is REQUIRED for success.\n"
-        "4. 'allPass' must be true ONLY if EVERY single criterion is met.\n\n"
-        "Respond ONLY with valid JSON:\n"
-        "{\"results\": [{\"req\": \"text\", \"pass\": true, \"feedback\": \"text\"}], \"allPass\": true, \"message\": \"text\"}"
-    )
+    # --- 4. Logic Audit (Only if Syntax is OK) ---
+    if syntax_passed:
+        prompt = (
+            f"You are a strict technical reviewer. Evaluate this Python code "
+            f"against these MANDATORY PASS CRITERIA: {rubric['requirements']}.\n\n"
+            f"STUDENT CODE:\n{code}\n\n"
+            "EVALUATION RULES:\n"
+            "1. If a criterion is missing, 'pass' must be false.\n"
+            "2. 'allPass' is true ONLY if every single criterion is met.\n"
+            "3. Note: Comments do NOT count toward the '10 lines of code' requirement.\n"
+            "Respond ONLY with valid JSON:\n"
+            "{\"results\": [{\"req\": \"text\", \"pass\": true, \"feedback\": \"text\"}], \"allPass\": true, \"message\": \"text\"}"
+        )
 
-    payload = json.dumps({
-        "messages": [
-            {"role": "system", "content": "You are a professional code auditor who outputs strictly formatted JSON feedback."},
-            {"role": "user", "content": prompt}
-        ],
-        "model": model_id,
-        "temperature": 0.0  # Set to 0 for maximum factual accuracy
-    }).encode("utf-8")
+        payload = json.dumps({
+            "messages": [
+                {"role": "system", "content": "You are a professional code auditor who outputs strictly formatted JSON feedback."},
+                {"role": "user", "content": prompt}
+            ],
+            "model": model_id,
+            "temperature": 0.0
+        }).encode("utf-8")
 
-    # --- 4. Call AI ---
-    print(f"Calling strict auditor at {model_id}...")
-    req = urllib.request.Request(url, data=payload, headers={"Authorization": f"Bearer {ai_token}", "Content-Type": "application/json"}, method="POST")
-    try:
-        with urllib.request.urlopen(req) as resp:
-            response_data = json.loads(resp.read().decode("utf-8"))
-            raw_ai_text = response_data["choices"][0]["message"]["content"].strip()
-            
-            # Clean JSON extraction
-            start = raw_ai_text.find('{')
-            end = raw_ai_text.rfind('}') + 1
-            result = json.loads(raw_ai_text[start:end])
-            print("AI audit complete!")
-    except Exception as e:
-        print(f"AI Error: {e}")
-        return
+        req = urllib.request.Request(url, data=payload, headers={"Authorization": f"Bearer {ai_token}", "Content-Type": "application/json"}, method="POST")
+        try:
+            with urllib.request.urlopen(req) as resp:
+                response_data = json.loads(resp.read().decode("utf-8"))
+                raw_ai_text = response_data["choices"][0]["message"]["content"].strip()
+                start = raw_ai_text.find('{')
+                end = raw_ai_text.rfind('}') + 1
+                result = json.loads(raw_ai_text[start:end])
+        except Exception as e:
+            print(f"AI Error: {e}")
+            return
+    else:
+        # If syntax failed, we skip AI and create a manual failure report
+        result = {
+            "allPass": False,
+            "message": f"Barnacles! Your code has a syntax error: {syntax_error_msg}",
+            "results": [{"req": "Valid Python Syntax", "pass": False, "feedback": "Fix your colons or indentation!"}]
+        }
 
-    # --- 5. Format Message ---
+    # --- 5. Format GitHub Message ---
     passed = result.get("allPass", False)
     status = "✅ PASSED" if passed else "❌ TRY AGAIN"
     comment_body = f"## {status}\n\n> {result.get('message', 'Keep going!')}\n\n"
@@ -74,53 +83,40 @@ def run_review():
         icon = "✅" if r["pass"] else "❌"
         comment_body += f"{icon} **{r['req']}**: {r['feedback']}\n"
 
-    # --- 6. GitHub Posting Logic ---
+    # --- 6. GitHub Posting & Rewards ---
     repo = os.environ.get("REPO")
-    gh_headers = {
-        "Authorization": f"Bearer {gh_token}",
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28"
-    }
+    gh_headers = {"Authorization": f"Bearer {gh_token}", "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
 
     try:
-        issues_url = f"https://api.github.com/repos/{repo}/issues?state=all" # Check all issues
+        issues_url = f"https://api.github.com/repos/{repo}/issues?state=all"
         with urllib.request.urlopen(urllib.request.Request(issues_url, headers=gh_headers)) as resp:
             issues = json.loads(resp.read())
         
-        issue_num = None
-        for i in issues:
-            if "mission 2" in i["title"].lower() or "loop" in i["title"].lower():
-                issue_num = i["number"]
-                break
-        
-        if not issue_num and issues:
-            issue_num = issues[0]["number"]
+        issue_num = next((i["number"] for i in issues if "mission 2" in i["title"].lower() or "loop" in i["title"].lower()), None)
 
         if issue_num:
-            # Post the comment
+            # Post comment
             post_url = f"https://api.github.com/repos/{repo}/issues/{issue_num}/comments"
             urllib.request.urlopen(urllib.request.Request(post_url, data=json.dumps({"body": comment_body}).encode(), headers=gh_headers, method="POST"))
             
             if passed:
-                # Close the issue on pass
+                # Close issue
                 patch_url = f"https://api.github.com/repos/{repo}/issues/{issue_num}"
                 urllib.request.urlopen(urllib.request.Request(patch_url, data=json.dumps({"state": "closed"}).encode(), headers=gh_headers, method="PATCH"))
                 
-                # Update identity.json locally
+                # Update stats
                 identity["xp"] += rubric.get("xpReward", 0)
                 if rubric["badge"] not in identity["badges"]:
                     identity["badges"].append(rubric["badge"])
                 with open("identity.json", "w") as f:
                     json.dump(identity, f, indent=2)
-                print("Student profile updated.")
             else:
-                # Re-open if it fails so the student sees it in their 'To Do'
+                # Re-open if it was closed
                 patch_url = f"https://api.github.com/repos/{repo}/issues/{issue_num}"
                 urllib.request.urlopen(urllib.request.Request(patch_url, data=json.dumps({"state": "open"}).encode(), headers=gh_headers, method="PATCH"))
-                print("Mission failed. Issue re-opened for corrections.")
 
     except Exception as e:
-        print(f"GitHub API Error: {e}")
+        print(f"GitHub Error: {e}")
 
 if __name__ == "__main__":
     run_review()
