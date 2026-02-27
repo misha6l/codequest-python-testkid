@@ -14,8 +14,8 @@ with open("identity.json", "r") as f:
 requirements = rubric["requirements"]
 req_list = "\n".join([str(i+1) + ". " + r for i, r in enumerate(requirements)])
 
-groq_key = os.environ["GROQ_API_KEY"]
-print("Key length: " + str(len(groq_key)))
+token = os.environ["GH_TOKEN"]
+print("Token length: " + str(len(token)))
 
 prompt = (
     "You are an AI code reviewer for a kids coding platform called CodeQuest. "
@@ -30,28 +30,28 @@ prompt = (
 )
 
 payload = json.dumps({
-    "model": "llama-3.3-70b-versatile",
+    "model": "meta-llama-3.1-70b-instruct",
     "messages": [{"role": "user", "content": prompt}],
     "temperature": 0.3
 }).encode()
 
 req = urllib.request.Request(
-    "https://api.groq.com/openai/v1/chat/completions",
+    "https://models.inference.ai.azure.com/chat/completions",
     data=payload,
     method="POST",
     headers={
-        "Authorization": "Bearer " + groq_key,
+        "Authorization": "Bearer " + token,
         "Content-Type": "application/json"
     }
 )
 
 with urllib.request.urlopen(req) as resp:
-    groq_resp = json.loads(resp.read())
+    ai_resp = json.loads(resp.read())
 
-raw = groq_resp["choices"][0]["message"]["content"].strip()
+raw = ai_resp["choices"][0]["message"]["content"].strip()
 raw = raw.replace("```json", "").replace("```", "").strip()
 result = json.loads(raw)
-print("Groq review complete")
+print("AI review complete")
 
 passed = result["allPass"]
 lines = []
@@ -89,7 +89,6 @@ else:
 
 comment_body = "\n".join(lines)
 
-token = os.environ.get("GH_TOKEN")
 repo = os.environ.get("REPO")
 
 if token and repo:
@@ -144,7 +143,7 @@ if token and repo:
                 next_body = (
                     "## MISSION 3 UNLOCKED: The Dictionary of Doom\n\n"
                     "> Plankton has stolen the Krabby Patty secret formula and locked it in a Python dictionary! "
-                    "Write a script that stores, retrieves, and updates data using dictionaries. Stop him! \n\n"
+                    "Write a script that stores, retrieves, and updates data using dictionaries. Stop him!\n\n"
                     "### Requirements\n"
                     "- [ ] Creates a dictionary with at least 3 key-value pairs\n"
                     "- [ ] Accesses at least one value using its key\n"
