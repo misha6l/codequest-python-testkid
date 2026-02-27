@@ -1,4 +1,3 @@
-import anthropic
 import json
 import os
 import urllib.request
@@ -17,10 +16,10 @@ with open("identity.json", "r") as f:
 requirements = rubric["requirements"]
 req_list = "\n".join([f"{i+1}. {r}" for i, r in enumerate(requirements)])
 
-# ── Call Claude ──
-client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+# ── Call Gemini ──
+gemini_key = os.environ["GEMINI_API_KEY"]
 
-prompt = f"""You are an AI code reviewer for a kids coding platform called CodeQuest. 
+prompt = f"""You are an AI code reviewer for a kids coding platform called CodeQuest.
 The student's theme is SpongeBob SquarePants — use fun SpongeBob references in your feedback.
 
 A student submitted Python code for mission: "{rubric['title']}"
@@ -33,7 +32,7 @@ Student's code:
 {code}
 ```
 
-Respond ONLY with valid JSON, no markdown fences:
+Respond ONLY with valid JSON, no markdown fences, no extra text:
 {{
   "results": [
     {{"req": "requirement text", "pass": true, "feedback": "one short encouraging sentence"}},
@@ -43,14 +42,22 @@ Respond ONLY with valid JSON, no markdown fences:
   "message": "2-3 sentence SpongeBob themed message. If passed: big celebration. If failed: encouraging, specific about what to fix next."
 }}"""
 
-response = client.messages.create(
-    model="claude-sonnet-4-20250514",
-    max_tokens=1000,
-    messages=[{"role": "user", "content": prompt}]
-)
+payload = json.dumps({
+    "contents": [{"parts": [{"text": prompt}]}],
+    "generationConfig": {"temperature": 0.3}
+}).encode()
 
-raw = response.content[0].text.strip()
+url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+req = urllib.request.Request(url, data=payload, method="POST",
+    headers={"Content-Type": "application/json"})
+
+with urllib.request.urlopen(req) as resp:
+    gemini_resp = json.loads(resp.read())
+
+raw = gemini_resp["candidates"][0]["content"]["parts"][0]["text"].strip()
+raw = raw.replace("```json", "").replace("```", "").strip()
 result = json.loads(raw)
+print("✅ Gemini review complete")
 
 # ── Build GitHub Issue comment ──
 passed = result["allPass"]
