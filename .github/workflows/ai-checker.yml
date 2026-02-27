@@ -4,11 +4,12 @@ on:
   push:
     paths:
       - 'submissions/solution.py'
-  workflow_dispatch: # This adds a 'Run Workflow' button for testing
+  workflow_dispatch: # This adds the "Run workflow" button in the Actions tab
 
 jobs:
   review:
     runs-on: ubuntu-latest
+    # This block gives the bot the specific 'keys' to write comments and close issues
     permissions:
       issues: write
       contents: write
@@ -24,7 +25,8 @@ jobs:
 
       - name: Run AI Review
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          # We use GITHUB_TOKEN here because it's built-in and respects the permissions above
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
           REPO: ${{ github.repository }}
         run: python .github/workflows/review.py
 
@@ -33,4 +35,5 @@ jobs:
           git config user.name "CodeQuest Bot"
           git config user.email "bot@codequest.dev"
           git add identity.json
-          git diff --staged --quiet || (git commit -m "Bot: updated student XP and badges" && git push)
+          # Only commit if the AI actually updated the XP or badges
+          git diff --staged --quiet || (git commit -m "Bot: updated student XP" && git push)
