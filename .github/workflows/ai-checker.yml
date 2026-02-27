@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'submissions/solution.py'
+  workflow_dispatch: # Allows manual testing from the Actions tab
 
 jobs:
   review:
@@ -32,5 +33,4 @@ jobs:
           git config user.name "CodeQuest Bot"
           git config user.email "bot@codequest.dev"
           git add identity.json
-          git diff --staged --quiet || git commit -m "Bot: updated progress after review"
-          git push
+          git diff --staged --quiet || (git commit -m "Bot: updated progress after review" && git push)
