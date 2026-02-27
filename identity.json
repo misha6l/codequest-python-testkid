@@ -2,15 +2,22 @@
   "name": "TestKid",
   "username": "testkid",
   "theme": "spongebob",
-  "avatar": "🧽",
+  "avatar": "\ud83e\uddfd",
   "track": "python",
   "level": 1,
-  "xp": 150,
+  "xp": 350,
   "streak": 1,
   "lastActive": "2026-02-26",
   "currentMission": "python-mission-2",
-  "completedMissions": ["python-mission-1"],
-  "badges": ["🧮 Calculator Kid"],
+  "completedMissions": [
+    "python-mission-1"
+  ],
+  "badges": [
+    "\ud83e\uddee Calculator Kid",
+    "\ud83d\udd2e Loop Lord"
+  ],
   "hintsUsed": 0,
-  "attempts": {"python-mission-1": 1}
+  "attempts": {
+    "python-mission-1": 1
+  }
 }
