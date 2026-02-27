@@ -5,7 +5,5 @@
 
 # YOUR CODE GOES HERE:
 # My code
-#retry
-#hi
 x = 5
 print(x)
