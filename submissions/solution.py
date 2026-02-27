@@ -4,4 +4,6 @@
 # The AI reviewer will check your code automatically!
 
 # YOUR CODE GOES HERE:
-
+# My code
+x = 5
+print(x)
