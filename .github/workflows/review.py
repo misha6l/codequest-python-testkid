@@ -16,11 +16,13 @@ def run_review():
         print(f"File loading error: {e}")
         return
 
-    # --- 2. GitHub Models Setup (GPT-4o-mini) ---
-    url = "https://models.inference.ai.azure.com/chat/completions"
-    token = os.environ.get("GH_TOKEN")
+    # --- 2. Setup Tokens ---
+    # This one is for the AI (The one you made in the Model marketplace)
+    ai_token = os.environ.get("AI_TOKEN") 
+    # This one is for GitHub (The automatic GITHUB_TOKEN)
+    gh_token = os.environ.get("GH_TOKEN")
     
-    # Use gpt-4o-mini as it is the most reliable for the free tier
+    url = "https://models.inference.ai.azure.com/chat/completions"
     model_id = "gpt-4o-mini" 
 
     prompt = (
@@ -39,20 +41,13 @@ def run_review():
         "temperature": 0.1
     }).encode("utf-8")
 
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
-
-    # --- 3. Call AI ---
-    print(f"Calling King Neptune (AI) at {model_id}...")
-    req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+    # --- 3. Call AI using the AI_TOKEN ---
+    print(f"Calling AI at {model_id}...")
+    req = urllib.request.Request(url, data=payload, headers={"Authorization": f"Bearer {ai_token}", "Content-Type": "application/json"}, method="POST")
     try:
         with urllib.request.urlopen(req) as resp:
             response_data = json.loads(resp.read().decode("utf-8"))
             raw_ai_text = response_data["choices"][0]["message"]["content"].strip()
-            
-            # Extract JSON cleanly in case of chatter
             start = raw_ai_text.find('{')
             end = raw_ai_text.rfind('}') + 1
             result = json.loads(raw_ai_text[start:end])
@@ -69,49 +64,46 @@ def run_review():
         icon = "✅" if r["pass"] else "❌"
         comment_body += f"{icon} **{r['req']}**: {r['feedback']}\n"
 
-    # --- 5. Find and Post to the Issue ---
+    # --- 5. Find and Post using the GH_TOKEN ---
     repo = os.environ.get("REPO")
     gh_headers = {
-        "Authorization": f"Bearer {token}",
+        "Authorization": f"Bearer {gh_token}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28"
     }
 
     try:
-        # Get all open issues
         issues_url = f"https://api.github.com/repos/{repo}/issues?state=open"
         with urllib.request.urlopen(urllib.request.Request(issues_url, headers=gh_headers)) as resp:
             issues = json.loads(resp.read())
         
-        # Search for the issue (looking for "Mission 2" or "Loop")
         issue_num = None
         for i in issues:
-            title_lower = i["title"].lower()
-            if "mission 2" in title_lower or "loop" in title_lower:
+            if "mission 2" in i["title"].lower() or "loop" in i["title"].lower():
                 issue_num = i["number"]
                 break
         
-        # If no specific title found, use the most recent open issue
         if not issue_num and issues:
             issue_num = issues[0]["number"]
 
         if issue_num:
-            print(f"Found Issue #{issue_num}. Posting comment...")
+            print(f"Posting to Issue #{issue_num}...")
             post_url = f"https://api.github.com/repos/{repo}/issues/{issue_num}/comments"
-            post_data = json.dumps({"body": comment_body}).encode()
+            urllib.request.urlopen(urllib.request.Request(post_url, data=json.dumps({"body": comment_body}).encode(), headers=gh_headers, method="POST"))
+            print(f"Success! Feedback sent.")
             
-            post_req = urllib.request.Request(post_url, data=post_data, headers=gh_headers, method="POST")
-            urllib.request.urlopen(post_req)
-            print(f"Success! Feedback sent to Issue #{issue_num}")
-            
-            # Close issue if passed
             if passed:
+                # Close issue
                 patch_url = f"https://api.github.com/repos/{repo}/issues/{issue_num}"
-                patch_req = urllib.request.Request(patch_url, data=json.dumps({"state": "closed"}).encode(), headers=gh_headers, method="PATCH")
-                urllib.request.urlopen(patch_req)
-                print("Mission accomplished. Issue closed.")
-        else:
-            print("Barnacles! No open issues found to post feedback to.")
+                urllib.request.urlopen(urllib.request.Request(patch_url, data=json.dumps({"state": "closed"}).encode(), headers=gh_headers, method="PATCH"))
+                
+                # Update XP in identity.json
+                identity["xp"] += rubric.get("xpReward", 0)
+                if rubric["badge"] not in identity["badges"]:
+                    identity["badges"].append(rubric["badge"])
+                with open("identity.json", "w") as f:
+                    json.dump(identity, f, indent=2)
+                print("XP and Badge updated!")
 
     except Exception as e:
         print(f"GitHub API Error: {e}")
