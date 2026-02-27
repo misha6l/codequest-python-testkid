@@ -18,6 +18,8 @@ req_list = "\n".join([f"{i+1}. {r}" for i, r in enumerate(requirements)])
 
 # ── Call Gemini ──
 gemini_key = os.environ["GEMINI_API_KEY"]
+print(f"Key length: {len(gemini_key)}")
+
 
 prompt = f"""You are an AI code reviewer for a kids coding platform called CodeQuest.
 The student's theme is SpongeBob SquarePants — use fun SpongeBob references in your feedback.
