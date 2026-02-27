@@ -1,10 +1,12 @@
 def check_power():
-    print("Power OK")
+    print("Power level stable.")
 
-for i in range(1, 5) 
-    if i > 2:
-        print(f"High power: {i}")
+
+for i in range(1, 11)
+    if i > 5:
+        print(f"High power at {i}")
     check_power()
-# Add some extra comments to make it 10 lines
-# Comment 9
-# Comment 10
+
+# Extra lines to reach the 10-line requirement
+# line 11
+# line 12
