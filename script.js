@@ -1,9 +1,9 @@
 async function loadDashboard() {
     try {
-        // Fetch student data and mission results
+        // Fetch data with Cache Buster to ensure we get the newest results
         const [identityRes, resultsRes] = await Promise.all([
-            fetch('identity.json'),
-            fetch('last_results.json')
+            fetch(`identity.json?v=${Date.now()}`),
+            fetch(`last_results.json?v=${Date.now()}`)
         ]);
 
         const identity = await identityRes.json();
@@ -16,28 +16,29 @@ async function loadDashboard() {
         const list = document.getElementById('checklist');
         list.innerHTML = ""; 
 
-        // Build checklist with a small delay for "Scanning" effect
+        // Build checklist with "Scanning" effect
         data.results.forEach((item, index) => {
             setTimeout(() => {
                 const li = document.createElement('li');
                 li.className = item.pass ? 'pass' : 'fail';
-                li.style.animation = "fadeIn 0.5s forwards";
                 li.innerHTML = `<span>${item.pass ? '✓' : '✗'}</span> <strong>${item.req}</strong>: ${item.feedback}`;
                 list.appendChild(li);
             }, index * 300); 
         });
 
         // Handle Routing if All Requirements Pass
-        if (data.allPass) {
+        if (data.allPass === true || data.allPass === "true") {
             setTimeout(() => {
                 document.getElementById('mission-status').innerText = "MISSION ACCOMPLISHED";
                 document.getElementById('next-assignment').classList.remove('hidden');
                 
-                // Map buttons to the destination pages
+                // Click events for the 3 routes
                 const cards = document.querySelectorAll('.route-card');
-                cards[0].onclick = () => window.location.href = 'mission-warrior.html';
-                cards[1].onclick = () => window.location.href = 'mission-architect.html';
-                cards[2].onclick = () => window.location.href = 'mission-explorer.html';
+                if (cards.length >= 3) {
+                    cards[0].onclick = () => window.location.href = 'mission-warrior.html';
+                    cards[1].onclick = () => window.location.href = 'mission-architect.html';
+                    cards[2].onclick = () => window.location.href = 'mission-explorer.html';
+                }
             }, data.results.length * 350);
         } else {
             document.getElementById('mission-status').innerText = "SYSTEM REPAIRS REQUIRED";
@@ -45,7 +46,7 @@ async function loadDashboard() {
 
     } catch (e) {
         console.error("Dashboard Error:", e);
-        document.getElementById('mission-status').innerText = "WAITING FOR UPLINK...";
+        document.getElementById('mission-status').innerText = "OFFLINE: CHECK JSON FILES";
     }
 }
 
