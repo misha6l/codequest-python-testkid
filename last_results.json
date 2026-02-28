@@ -3,12 +3,12 @@
     {
       "req": "Uses a for loop",
       "pass": true,
-      "feedback": "The code uses a for loop to iterate over a range of numbers."
+      "feedback": "The code uses a for loop to iterate from 1 to 10."
     },
     {
       "req": "Uses an if statement inside the loop",
       "pass": true,
-      "feedback": "The code includes an if statement that checks if the loop variable is greater than 5."
+      "feedback": "The code contains an if statement that checks if the loop variable is greater than 5."
     },
     {
       "req": "Defines at least one function with def",
