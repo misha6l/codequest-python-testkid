@@ -2,41 +2,38 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CodeQuest Mission Control</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="stars"></div>
     <div class="terminal">
         <header>
             <h1 id="mission-status">RECONNAISSANCE IN PROGRESS...</h1>
             <div class="user-stats">
                 XP: <span id="xp-val">0</span> | Rank: <span id="rank-val">Recruit</span>
+                <button onclick="window.location.href='map.html'" class="map-btn">🗺️ VIEW SKILL MAP</button>
             </div>
         </header>
 
         <section id="feedback-area">
-            <div id="loading-bar"><div class="progress"></div></div>
-            <ul id="checklist">
-                </ul>
+            <ul id="checklist"></ul>
         </section>
 
         <section id="next-assignment" class="hidden">
             <hr>
             <h3>MISSION SUCCESS! CHOOSE YOUR NEXT PATH:</h3>
             <div class="route-container">
-                <div class="route-card" onclick="alert('Main Quest: Boolean Barnacles starting!')">
+                <div class="route-card" id="route-warrior">
                     <h4>⚔️ THE WARRIOR</h4>
-                    <p>Master Logic & If-Statements</p>
+                    <p>Logic & If-Statements</p>
                 </div>
-                <div class="route-card" onclick="alert('Creative Quest: Geometric Art starting!')">
+                <div class="route-card" id="route-architect">
                     <h4>🎨 THE ARCHITECT</h4>
-                    <p>Build a Graphic Generator</p>
+                    <p>Patterns & Graphics</p>
                 </div>
-                <div class="route-card" onclick="alert('Explorer Quest: Secrets of the Repo!')">
+                <div class="route-card" id="route-explorer">
                     <h4>🗺️ THE EXPLORER</h4>
-                    <p>Unlock Hidden Repo Secrets</p>
+                    <p>Hidden Repo Secrets</p>
                 </div>
             </div>
         </section>
