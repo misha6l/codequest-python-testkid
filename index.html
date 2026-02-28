@@ -2,42 +2,49 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CodeQuest Mission Control</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeQuest | Mission Dashboard</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="terminal">
+    <div class="container">
         <header>
-            <h1 id="mission-status">RECONNAISSANCE IN PROGRESS...</h1>
-            <div class="user-stats">
-                XP: <span id="xp-val">0</span> | Rank: <span id="rank-val">Recruit</span>
-                <button onclick="window.location.href='map.html'" class="map-btn">🗺️ VIEW SKILL MAP</button>
+            <h1>MISSION STATUS: <span id="mission-status">INITIALIZING...</span></h1>
+            <div class="stats">
+                <p>XP: <span id="xp-val">0</span></p>
+                <p>RANK: <span id="rank-val">Cadet</span></p>
             </div>
         </header>
 
-        <section id="feedback-area">
-            <ul id="checklist"></ul>
-        </section>
+        <main>
+            <section id="terminal">
+                <ul id="checklist">
+                    </ul>
+            </section>
 
-        <section id="next-assignment" class="hidden">
-            <hr>
-            <h3>MISSION SUCCESS! CHOOSE YOUR NEXT PATH:</h3>
-            <div class="route-container">
-                <div class="route-card" id="route-warrior">
-                    <h4>⚔️ THE WARRIOR</h4>
-                    <p>Logic & If-Statements</p>
+            <section id="next-assignment" class="hidden">
+                <hr>
+                <h2>CHOOSE YOUR PATH: MISSION 3</h2>
+                <div class="route-container">
+                    <div class="route-card" id="warrior-path">
+                        <h3>⚔️ THE WARRIOR</h3>
+                        <p>Focus on advanced logic and combat algorithms.</p>
+                    </div>
+                    <div class="route-card" id="architect-path">
+                        <h3>🏗️ THE ARCHITECT</h3>
+                        <p>Design complex structures and data patterns.</p>
+                    </div>
+                    <div class="route-card" id="explorer-path">
+                        <h3>🛰️ THE EXPLORER</h3>
+                        <p>Discover hidden functions and optimize systems.</p>
+                    </div>
                 </div>
-                <div class="route-card" id="route-architect">
-                    <h4>🎨 THE ARCHITECT</h4>
-                    <p>Patterns & Graphics</p>
-                </div>
-                <div class="route-card" id="route-explorer">
-                    <h4>🗺️ THE EXPLORER</h4>
-                    <p>Hidden Repo Secrets</p>
-                </div>
-            </div>
-        </section>
+            </section>
+        </main>
+
+        <button onclick="window.location.href='map.html'" class="map-btn">VIEW SKILL MAP</button>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
