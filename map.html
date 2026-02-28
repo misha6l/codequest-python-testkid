@@ -1,1 +1,39 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CodeQuest Skill Map</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .map-container { display: flex; flex-direction: column; align-items: center; padding: 40px; }
+        .node { 
+            width: 120px; height: 120px; border: 3px solid #00ff41; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; text-align: center;
+            background: #000; margin: 10px; font-weight: bold; font-size: 0.8em;
+        }
+        .node.completed { background: #00ff41; color: #000; box-shadow: 0 0 15px #00ff41; }
+        .node.locked { opacity: 0.3; border-style: dashed; }
+        .line { width: 4px; height: 40px; background: #00ff41; }
+        .branch { display: flex; gap: 40px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <h1>PROJECT: SKILL TREE</h1>
+        <div class="map-container">
+            <div class="node completed">MISSION 1<br>Basics</div>
+            <div class="line"></div>
+            <div class="node completed">MISSION 2<br>The Loop</div>
+            <div class="line"></div>
+            
+            <p>--- UNLOCK BRANCHES ---</p>
+            <div class="branch">
+                <div class="node locked">MISSION 3<br>Warrior</div>
+                <div class="node locked">MISSION 3<br>Architect</div>
+                <div class="node locked">MISSION 3<br>Explorer</div>
+            </div>
+        </div>
+        <button onclick="window.location.href='index.html'">← BACK TO DASHBOARD</button>
+    </div>
+</body>
+</html>
