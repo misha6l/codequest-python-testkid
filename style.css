@@ -1,38 +1,112 @@
+/* Base Theme */
 body {
-    background-color: #0a0a0a;
-    color: #00ff41;
+    background-color: #0d1117;
+    color: #c9d1d9;
     font-family: 'Courier New', Courier, monospace;
     display: flex;
     justify-content: center;
-    padding-top: 50px;
+    padding: 20px;
 }
 
-.terminal {
-    background: rgba(0, 40, 0, 0.9);
-    border: 2px solid #00ff41;
-    padding: 30px;
-    width: 80%;
+.container {
+    width: 100%;
     max-width: 800px;
-    box-shadow: 0 0 20px #00ff41;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
-.hidden { display: none; }
+/* Header & Stats */
+header {
+    border-bottom: 2px solid #30363d;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+}
 
-.route-container { display: flex; gap: 15px; margin-top: 20px; }
+h1 { color: #58a6ff; font-size: 1.5rem; }
+.stats { display: flex; gap: 20px; color: #8b949e; }
+
+/* Checklist Terminal */
+#terminal {
+    background: #010409;
+    padding: 15px;
+    border-radius: 5px;
+    border-left: 4px solid #30363d;
+    min-height: 150px;
+}
+
+ul { list-style: none; padding: 0; }
+
+li {
+    margin: 10px 0;
+    padding: 5px;
+    opacity: 0; /* Handled by JS Animation */
+    animation: fadeIn 0.5s forwards;
+}
+
+.pass { color: #3fb950; } /* Success Green */
+.fail { color: #f85149; } /* Error Red */
+
+/* Hidden State - CRITICAL FOR ROUTING */
+.hidden { 
+    display: none !important; 
+}
+
+/* Mission Routes Section */
+#next-assignment {
+    margin-top: 30px;
+    animation: slideUp 0.8s ease-out;
+}
+
+.route-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
 
 .route-card {
-    border: 1px solid #00ff41;
+    background: #21262d;
+    border: 1px solid #30363d;
     padding: 15px;
-    flex: 1;
+    border-radius: 8px;
     cursor: pointer;
-    transition: 0.3s;
+    transition: all 0.3s ease;
+    text-align: center;
 }
 
 .route-card:hover {
-    background: #00ff41;
-    color: #000;
+    border-color: #58a6ff;
+    transform: translateY(-5px);
+    background: #30363d;
+    box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
 }
 
-#checklist { list-style: none; padding: 0; }
-.pass { color: #00ff41; }
-.fail { color: #ff4141; }
+.route-card h3 { margin-top: 0; color: #58a6ff; }
+
+/* Map Button */
+.map-btn {
+    margin-top: 30px;
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid #8b949e;
+    color: #8b949e;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.map-btn:hover { color: white; border-color: white; }
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
