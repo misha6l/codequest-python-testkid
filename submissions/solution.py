@@ -6,7 +6,7 @@ def check_power():
     print("extra line")
     print("extra line")
     print("extra line")
-    print("extra line")
+    
 
 
 for i in range(1, 11):
