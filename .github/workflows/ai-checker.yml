@@ -3,12 +3,11 @@ name: CodeQuest AI Reviewer
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # This adds the "Run workflow" button in the Actions tab
+  workflow_dispatch: 
 
 jobs:
   review:
     runs-on: ubuntu-latest
-    # This block gives the bot the specific 'keys' to write comments and close issues
     permissions:
       issues: write
       contents: write
@@ -24,17 +23,16 @@ jobs:
 
       - name: Run AI Review
         env:
-          # This uses the built-in token for GitHub comments (solves the 403 error)
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # This uses your saved secret for the AI Model (GPT-4o-mini)
           AI_TOKEN: ${{ secrets.GH_TOKEN }} 
           REPO: ${{ github.repository }}
-        run: python .github/workflows/review.py
+        # MOVED: Now points to the root instead of the workflows folder
+        run: python review.py
 
       - name: Commit Progress
         run: |
           git config user.name "CodeQuest Bot"
           git config user.email "bot@codequest.dev"
-          git add identity.json
-          # Only commit if the AI successfully updated the XP or badges in identity.json
-          git diff --staged --quiet || (git commit -m "Bot: updated student XP" && git push)
+          # ADDED: This ensures the website data (last_results.json) is saved
+          git add identity.json last_results.json
+          git diff --staged --quiet || (git commit -m "Bot: updated student progress and dashboard" && git push)
