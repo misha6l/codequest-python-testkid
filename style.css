@@ -1,1 +1,38 @@
+body {
+    background-color: #0a0a0a;
+    color: #00ff41;
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    justify-content: center;
+    padding-top: 50px;
+}
 
+.terminal {
+    background: rgba(0, 40, 0, 0.9);
+    border: 2px solid #00ff41;
+    padding: 30px;
+    width: 80%;
+    max-width: 800px;
+    box-shadow: 0 0 20px #00ff41;
+}
+
+.hidden { display: none; }
+
+.route-container { display: flex; gap: 15px; margin-top: 20px; }
+
+.route-card {
+    border: 1px solid #00ff41;
+    padding: 15px;
+    flex: 1;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.route-card:hover {
+    background: #00ff41;
+    color: #000;
+}
+
+#checklist { list-style: none; padding: 0; }
+.pass { color: #00ff41; }
+.fail { color: #ff4141; }
