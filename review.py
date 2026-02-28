@@ -18,7 +18,6 @@ def run_review():
         return
 
     # --- 2. PRE-CHECK: Syntax Validation ---
-    # This catches colons and typos that the AI might ignore
     syntax_passed = True
     syntax_error_msg = ""
     try:
@@ -68,7 +67,6 @@ def run_review():
             print(f"AI Error: {e}")
             return
     else:
-        # If syntax failed, we skip AI and create a manual failure report
         result = {
             "allPass": False,
             "message": f"Barnacles! Your code has a syntax error: {syntax_error_msg}",
@@ -95,28 +93,33 @@ def run_review():
         issue_num = next((i["number"] for i in issues if "mission 2" in i["title"].lower() or "loop" in i["title"].lower()), None)
 
         if issue_num:
-            # Post comment
             post_url = f"https://api.github.com/repos/{repo}/issues/{issue_num}/comments"
             urllib.request.urlopen(urllib.request.Request(post_url, data=json.dumps({"body": comment_body}).encode(), headers=gh_headers, method="POST"))
             
             if passed:
-                # Close issue
                 patch_url = f"https://api.github.com/repos/{repo}/issues/{issue_num}"
                 urllib.request.urlopen(urllib.request.Request(patch_url, data=json.dumps({"state": "closed"}).encode(), headers=gh_headers, method="PATCH"))
                 
-                # Update stats
                 identity["xp"] += rubric.get("xpReward", 0)
                 if rubric["badge"] not in identity["badges"]:
                     identity["badges"].append(rubric["badge"])
                 with open("identity.json", "w") as f:
                     json.dump(identity, f, indent=2)
             else:
-                # Re-open if it was closed
                 patch_url = f"https://api.github.com/repos/{repo}/issues/{issue_num}"
                 urllib.request.urlopen(urllib.request.Request(patch_url, data=json.dumps({"state": "open"}).encode(), headers=gh_headers, method="PATCH"))
 
     except Exception as e:
         print(f"GitHub Error: {e}")
+
+    # --- 7. NEW: Update Dashboard Data (CRITICAL) ---
+    # This writes the AI results to the file the website actually reads.
+    try:
+        with open("last_results.json", "w") as f:
+            json.dump(result, f, indent=2)
+        print("Dashboard data updated successfully.")
+    except Exception as e:
+        print(f"Error updating dashboard JSON: {e}")
 
 if __name__ == "__main__":
     run_review()
