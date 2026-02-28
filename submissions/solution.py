@@ -5,7 +5,7 @@ def check_power():
     print("extra line")
     print("extra line")
     print("extra line")
-    print("extra line")
+    PRINT("extra line")
     
 
 
