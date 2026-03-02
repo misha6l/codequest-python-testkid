@@ -1,39 +1,197 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>CodeQuest Skill Map</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        .map-container { display: flex; flex-direction: column; align-items: center; padding: 40px; }
-        .node { 
-            width: 120px; height: 120px; border: 3px solid #00ff41; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; text-align: center;
-            background: #000; margin: 10px; font-weight: bold; font-size: 0.8em;
-        }
-        .node.completed { background: #00ff41; color: #000; box-shadow: 0 0 15px #00ff41; }
-        .node.locked { opacity: 0.3; border-style: dashed; }
-        .line { width: 4px; height: 40px; background: #00ff41; }
-        .branch { display: flex; gap: 40px; margin-top: 20px; }
-    </style>
+<meta charset="UTF-8">
+<title>CodeQuest — Galaxy Map</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;800;900&display=swap');
+:root { --gold:#FFD700; --green:#00ffaa; --bg:#03001e; }
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{min-height:100vh;background:radial-gradient(ellipse at 20% 20%,#0d0630 0%,#03001e 50%,#020018 100%);font-family:'Nunito',sans-serif;color:white;overflow-x:hidden}
+#stars{position:fixed;inset:0;pointer-events:none;z-index:0}
+.star{position:absolute;border-radius:50%;background:white;animation:twinkle var(--dur) infinite ease-in-out;opacity:var(--op)}
+@keyframes twinkle{0%,100%{opacity:var(--op);transform:scale(1)}50%{opacity:calc(var(--op)*0.15);transform:scale(0.4)}}
+header{position:relative;z-index:10;text-align:center;padding:36px 20px 16px}
+header h1{font-family:'Fredoka One',cursive;font-size:clamp(2rem,6vw,3.5rem);background:linear-gradient(135deg,#FFD700,#ff6eb4,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 20px rgba(255,215,0,0.4));letter-spacing:2px}
+#hero-card{display:inline-flex;gap:20px;flex-wrap:wrap;justify-content:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:50px;padding:10px 28px;margin-top:14px;font-size:.85rem;font-weight:600}
+#hero-card .val{color:var(--gold);font-weight:900}
+#badges-row{margin-top:10px;font-size:1.4rem;letter-spacing:6px}
+#map-canvas{position:relative;z-index:10;width:100%;max-width:860px;margin:10px auto 0;padding:0 20px 80px;min-height:660px}
+#path-svg{position:absolute;top:0;left:0;width:100%;pointer-events:none;overflow:visible}
+.planet-wrap{position:absolute;display:flex;flex-direction:column;align-items:center;transition:transform 0.2s}
+.planet-wrap.clickable{cursor:pointer}
+.planet-wrap.clickable:hover .planet{transform:scale(1.1)}
+.planet{border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;transition:all 0.3s}
+.planet.completed{border:4px solid rgba(255,255,255,0.5);box-shadow:0 0 30px var(--pc),0 0 60px rgba(var(--pr),0.25)}
+.planet.unlocked{border:4px solid var(--gold);box-shadow:0 0 30px var(--pc),0 0 60px rgba(var(--pr),0.35);animation:ppulse 2.2s infinite}
+.planet.locked{border:3px dashed #2a2a4a;filter:grayscale(1) brightness(0.25)}
+@keyframes ppulse{0%,100%{box-shadow:0 0 28px var(--pc),0 0 55px rgba(var(--pr),0.3)}50%{box-shadow:0 0 50px var(--pc),0 0 90px rgba(var(--pr),0.55)}}
+.check-badge{position:absolute;top:-7px;right:-7px;width:26px;height:26px;border-radius:50%;background:var(--green);color:#000;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:900;box-shadow:0 0 12px var(--green)}
+.planet-label{margin-top:10px;text-align:center;max-width:120px}
+.pname{font-family:'Fredoka One',cursive;font-size:.9rem;color:white;text-shadow:0 2px 8px rgba(0,0,0,.9)}
+.psub{font-size:.65rem;font-weight:600;color:rgba(255,255,255,.45);margin-top:2px}
+.ptag{display:inline-block;margin-top:5px;padding:2px 10px;border-radius:20px;font-size:.6rem;font-weight:800;letter-spacing:1px}
+.ptag.done{background:rgba(0,255,170,.15);color:var(--green);border:1px solid var(--green)}
+.ptag.go{background:rgba(255,215,0,.15);color:var(--gold);border:1px solid var(--gold);animation:tagblink 1.5s infinite}
+.ptag.lock{background:rgba(255,255,255,.04);color:#444;border:1px solid #333}
+@keyframes tagblink{0%,100%{opacity:1}50%{opacity:.4}}
+.branch-label{position:absolute;font-family:'Fredoka One',cursive;font-size:1rem;color:rgba(255,255,255,.12);letter-spacing:3px;pointer-events:none}
+#back-btn{display:block;margin:0 auto 50px;position:relative;z-index:10;padding:13px 38px;background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.12);border-radius:50px;color:rgba(255,255,255,.55);font-family:'Nunito',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:1px}
+#back-btn:hover{background:rgba(255,255,255,.09);color:white;border-color:rgba(255,255,255,.25)}
+#pass-banner{display:none;position:fixed;top:0;left:0;right:0;z-index:999;background:linear-gradient(135deg,#1a0050,#3d0070,#1a0050);border-bottom:3px solid var(--gold);padding:18px 20px;text-align:center;animation:bdown .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes bdown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+#pass-banner h2{font-family:'Fredoka One',cursive;font-size:clamp(1.1rem,4vw,1.8rem);color:var(--gold);text-shadow:0 0 30px var(--gold)}
+#pass-banner p{font-size:.75rem;color:rgba(255,255,255,.55);margin-top:4px}
+.tip{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:rgba(8,4,24,.97);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 14px;font-size:.7rem;white-space:nowrap;color:rgba(255,255,255,.75);pointer-events:none;opacity:0;transition:opacity .18s;z-index:200}
+.planet-wrap:hover .tip{opacity:1}
+</style>
 </head>
 <body>
-    <div class="terminal">
-        <h1>PROJECT: SKILL TREE</h1>
-        <div class="map-container">
-            <div class="node completed">MISSION 1<br>Basics</div>
-            <div class="line"></div>
-            <div class="node completed">MISSION 2<br>The Loop</div>
-            <div class="line"></div>
-            
-            <p>--- UNLOCK BRANCHES ---</p>
-            <div class="branch">
-                <div class="node locked">MISSION 3<br>Warrior</div>
-                <div class="node locked">MISSION 3<br>Architect</div>
-                <div class="node locked">MISSION 3<br>Explorer</div>
-            </div>
-        </div>
-        <button onclick="window.location.href='index.html'">← BACK TO DASHBOARD</button>
-    </div>
+<div id="stars"></div>
+<div id="pass-banner">
+  <h2>🌟 MISSION COMPLETE! NEW WORLDS UNLOCKED! 🌟</h2>
+  <p>Choose your next planet to explore below</p>
+</div>
+<header>
+  <h1>🚀 GALAXY MAP</h1>
+  <div id="hero-card">
+    <span>🧑‍🚀 <span class="val" id="h-name">—</span></span>
+    <span>⚡ XP: <span class="val" id="h-xp">—</span></span>
+    <span>🏆 Lvl <span class="val" id="h-lvl">—</span></span>
+    <span>🔥 <span class="val" id="h-streak">—</span> day streak</span>
+  </div>
+  <div id="badges-row"></div>
+</header>
+<div id="map-canvas"><svg id="path-svg"></svg></div>
+<button id="back-btn" onclick="window.location.href='index.html'">← Back to Dashboard</button>
+<script>
+const starsEl=document.getElementById('stars');
+for(let i=0;i<200;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*2.5+0.4;s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--op:${0.15+Math.random()*0.7}`;starsEl.appendChild(s)}
+
+const PLANETS=[
+  {id:'python-mission-1',label:'Mission 1',sub:'The Calculator',emoji:'🧮',size:92,grad:'radial-gradient(circle at 33% 33%,#86efac,#16a34a,#052e16)',pc:'#4ade80',pr:'74,222,128',href:'index.html',tip:'Build a Krabby Patty Calculator!'},
+  {id:'python-mission-2',label:'Mission 2',sub:'The Loop',emoji:'🌀',size:104,grad:'radial-gradient(circle at 33% 33%,#7dd3fc,#0284c7,#082f49)',pc:'#38bdf8',pr:'56,189,248',href:'index.html',tip:'Master loops and functions!'},
+  {id:'python-mission-3-warrior',label:'Warrior',sub:'Logic Duel',emoji:'⚔️',size:84,grad:'radial-gradient(circle at 33% 33%,#fca5a5,#dc2626,#450a0a)',pc:'#f87171',pr:'248,113,113',href:'mission-warrior.html',tip:'Build a combat calculator!'},
+  {id:'python-mission-3-architect',label:'Architect',sub:'Build a Bot',emoji:'🏗️',size:84,grad:'radial-gradient(circle at 33% 33%,#c4b5fd,#7c3aed,#2e1065)',pc:'#a78bfa',pr:'167,139,250',href:'mission-architect.html',tip:'Design and build a bot!'},
+  {id:'python-mission-3-explorer',label:'Explorer',sub:'Into the Wild',emoji:'🧭',size:84,grad:'radial-gradient(circle at 33% 33%,#fdba74,#ea580c,#431407)',pc:'#fb923c',pr:'251,146,60',href:'mission-explorer.html',tip:'Explore uncharted code!'},
+];
+
+const POS={
+  'python-mission-1':{cx:.50,cy:105},
+  'python-mission-2':{cx:.50,cy:278},
+  'python-mission-3-warrior':{cx:.17,cy:470},
+  'python-mission-3-architect':{cx:.50,cy:490},
+  'python-mission-3-explorer':{cx:.83,cy:470},
+};
+
+const EDGES=[
+  ['python-mission-1','python-mission-2'],
+  ['python-mission-2','python-mission-3-warrior'],
+  ['python-mission-2','python-mission-3-architect'],
+  ['python-mission-2','python-mission-3-explorer'],
+];
+
+async function loadIdentity(){
+  try{return await(await fetch('identity.json?t='+Date.now())).json();}
+  catch{return{name:'Coder',level:1,xp:0,streak:0,badges:[],completedMissions:[],currentMission:'python-mission-1'};}
+}
+
+function getStatus(id,done,cur){
+  if(done.includes(id))return'completed';
+  if(id.includes('mission-3'))return done.includes('python-mission-2')?'unlocked':'locked';
+  return id===cur?'unlocked':'locked';
+}
+
+function render(identity){
+  const done=identity.completedMissions||[];
+  const cur=identity.currentMission||'python-mission-1';
+  const canvas=document.getElementById('map-canvas');
+  const svg=document.getElementById('path-svg');
+  const W=canvas.offsetWidth;
+  const H=640;
+  canvas.style.minHeight=H+'px';
+  svg.style.height=H+'px';
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML='';
+
+  for(const[a,b]of EDGES){
+    const ap=POS[a],bp=POS[b];
+    const x1=ap.cx*W,y1=ap.cy,x2=bp.cx*W,y2=bp.cy;
+    const mx=(x1+x2)/2,my=(y1+y2)/2-30;
+    const isDone=done.includes(a);
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d',`M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`);
+    p.setAttribute('fill','none');
+    p.setAttribute('stroke',isDone?'rgba(255,255,255,0.2)':'rgba(255,255,255,0.05)');
+    p.setAttribute('stroke-width','2');
+    if(!isDone)p.setAttribute('stroke-dasharray','6 5');
+    svg.appendChild(p);
+  }
+
+  canvas.querySelectorAll('.planet-wrap,.branch-label').forEach(e=>e.remove());
+
+  if(done.includes('python-mission-2')){
+    const bl=document.createElement('div');
+    bl.className='branch-label';
+    bl.textContent='— CHOOSE YOUR PATH —';
+    bl.style.cssText='left:50%;top:405px;transform:translateX(-50%);';
+    canvas.appendChild(bl);
+  }
+
+  for(const p of PLANETS){
+    const pos=POS[p.id];
+    const st=getStatus(p.id,done,cur);
+    const x=pos.cx*W,y=pos.cy;
+
+    const wrap=document.createElement('div');
+    wrap.className='planet-wrap'+(st!=='locked'?' clickable':'');
+    wrap.style.cssText=`left:${x}px;top:${y}px;transform:translate(-50%,-50%);`;
+
+    const tip=document.createElement('div');
+    tip.className='tip';tip.textContent=p.tip;
+    wrap.appendChild(tip);
+
+    const planet=document.createElement('div');
+    planet.className=`planet ${st}`;
+    planet.style.cssText=`width:${p.size}px;height:${p.size}px;background:${p.grad};--pc:${p.pc};--pr:${p.pr};`;
+    planet.innerHTML=`<span style="font-size:${Math.round(p.size*.38)}px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6))">${p.emoji}</span>`;
+
+    if(st==='completed'){
+      const cb=document.createElement('div');
+      cb.className='check-badge';cb.textContent='✓';
+      planet.appendChild(cb);
+    }
+    wrap.appendChild(planet);
+
+    const lbl=document.createElement('div');
+    lbl.className='planet-label';
+    const tagTxt=st==='completed'?'✓ DONE':st==='unlocked'?'▶ START':'🔒';
+    const tagCls=st==='completed'?'done':st==='unlocked'?'go':'lock';
+    lbl.innerHTML=`<div class="pname">${p.label}</div><div class="psub">${p.sub}</div><span class="ptag ${tagCls}">${tagTxt}</span>`;
+    wrap.appendChild(lbl);
+
+    if(st!=='locked')wrap.addEventListener('click',()=>window.location.href=p.href);
+    canvas.appendChild(wrap);
+  }
+}
+
+async function init(){
+  const id=await loadIdentity();
+  document.getElementById('h-name').textContent=id.name||'Coder';
+  document.getElementById('h-xp').textContent=id.xp||0;
+  document.getElementById('h-lvl').textContent=id.level||1;
+  document.getElementById('h-streak').textContent=id.streak||0;
+  document.getElementById('badges-row').textContent=(id.badges||[]).join('  ');
+  render(id);
+  window.addEventListener('resize',()=>render(id));
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('passed')==='1'){
+    const b=document.getElementById('pass-banner');
+    b.style.display='block';
+    setTimeout(()=>b.style.display='none',5500);
+  }
+}
+init();
+</script>
 </body>
 </html>
