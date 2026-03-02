@@ -23,9 +23,9 @@
     {
       "req": "Script has at least 10 lines of code",
       "pass": false,
-      "feedback": "The script does not have at least 10 lines of code excluding comments."
+      "feedback": "The script does not have at least 10 lines of executable code; comments do not count."
     }
   ],
   "allPass": false,
-  "message": "The script fails to meet the requirement of having at least 10 lines of code."
+  "message": "The script fails to meet the requirement of having at least 10 lines of executable code."
 }
