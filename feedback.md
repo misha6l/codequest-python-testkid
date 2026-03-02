@@ -2,7 +2,7 @@
 **Hero:** TestKid  
 **Status:** ❌ TRY AGAIN
 
-> The script fails to meet the requirement of having at least 10 lines of executable code.
+> The code meets 4 out of 5 mandatory criteria. Please ensure there are at least 10 lines of executable code.
 
 ## Checklist
 
@@ -15,7 +15,7 @@
 - ✅ **Uses print() to display output**  
   The code uses print() multiple times to display output.
 - ❌ **Script has at least 10 lines of code**  
-  The script does not have at least 10 lines of executable code; comments do not count.
+  The script does not have at least 10 lines of executable code; it only has 7 lines of actual code.
 
 ---
 
