@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MISSION COMPLETE — CodeQuest</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap');
+
+        :root {
+            --gold: #ffd700;
+            --green: #00ff41;
+            --bg: #020c02;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            font-family: 'Orbitron', monospace;
+            color: var(--gold);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Stars bg */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                radial-gradient(1px 1px at 20% 30%, rgba(255,215,0,0.4) 0%, transparent 100%),
+                radial-gradient(1px 1px at 60% 20%, rgba(0,255,65,0.3) 0%, transparent 100%),
+                radial-gradient(1px 1px at 80% 70%, rgba(255,215,0,0.4) 0%, transparent 100%),
+                radial-gradient(1px 1px at 40% 80%, rgba(0,255,65,0.2) 0%, transparent 100%),
+                radial-gradient(1px 1px at 10% 60%, rgba(255,215,0,0.3) 0%, transparent 100%);
+            background-size: 200px 200px;
+            animation: twinkle 4s infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes twinkle {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+
+        .card {
+            text-align: center;
+            padding: 60px 40px;
+            border: 3px solid var(--gold);
+            box-shadow: 0 0 60px rgba(255,215,0,0.3), inset 0 0 30px rgba(255,215,0,0.05);
+            background: rgba(0,0,0,0.7);
+            max-width: 500px;
+            width: 90%;
+            animation: appear 0.6s ease;
+        }
+
+        @keyframes appear {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .trophy {
+            font-size: 5rem;
+            animation: bounce 1s infinite alternate;
+            display: block;
+            margin-bottom: 24px;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-12px); }
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: clamp(0.9rem, 3vw, 1.3rem);
+            color: var(--gold);
+            text-shadow: 0 0 30px var(--gold);
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        #badge-earned {
+            font-size: 2rem;
+            margin: 16px 0;
+        }
+
+        #xp-earned {
+            font-size: 0.7rem;
+            color: var(--green);
+            margin-bottom: 24px;
+            letter-spacing: 2px;
+        }
+
+        p {
+            font-size: 0.65rem;
+            color: #888;
+            margin-bottom: 32px;
+            line-height: 1.8;
+        }
+
+        .countdown {
+            font-size: 0.65rem;
+            color: #555;
+            margin-bottom: 24px;
+        }
+
+        .countdown span {
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 36px;
+            border: 2px solid var(--gold);
+            color: var(--gold);
+            background: transparent;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.7rem;
+            cursor: pointer;
+            letter-spacing: 2px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--gold);
+            color: #000;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #111;
+            border: 1px solid #333;
+            margin: 24px 0 8px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gold);
+            width: 0%;
+            transition: width 0.1s linear;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <span class="trophy">🏆</span>
+    <h1>MISSION<br>COMPLETE!</h1>
+    <div id="badge-earned"></div>
+    <div id="xp-earned"></div>
+    <p>Your skills have grown. New paths have unlocked on the Skill Map. Choose your next mission!</p>
+
+    <div class="progress-bar">
+        <div class="progress-fill" id="fill"></div>
+    </div>
+    <div class="countdown">Redirecting in <span id="seconds">5</span>s...</div>
+
+    <a class="btn" href="https://misha6l.github.io/codequest-python-testkid/map.html?passed=1">→ OPEN SKILL MAP NOW</a>
+</div>
+
+<script>
+    // Load identity to show badge + XP
+    fetch('identity.json?v=' + Date.now())
+        .then(r => r.json())
+        .then(identity => {
+            const badges = identity.badges || [];
+            if (badges.length > 0) {
+                document.getElementById('badge-earned').textContent = badges[badges.length - 1];
+            }
+            document.getElementById('xp-earned').textContent = `⚡ XP: ${identity.xp || 0}`;
+        })
+        .catch(() => {});
+
+    // Countdown & auto-redirect
+    let secs = 5;
+    const fillEl = document.getElementById('fill');
+    const secsEl = document.getElementById('seconds');
+
+    const BASE = 'https://misha6l.github.io/codequest-python-testkid/';
+
+    const interval = setInterval(() => {
+        secs--;
+        secsEl.textContent = secs;
+        fillEl.style.width = ((5 - secs) / 5 * 100) + '%';
+        if (secs <= 0) {
+            clearInterval(interval);
+            window.location.href = BASE + 'map.html?passed=1';
+        }
+    }, 1000);
+</script>
+</body>
+</html>
