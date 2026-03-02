@@ -3,16 +3,28 @@ import os
 import urllib.request
 import urllib.error
 import py_compile
+import re
 
 def run_review():
-    # --- 1. Load Data ---
+    # --- 1. Load Identity & Detect Current Mission Dynamically ---
+    try:
+        with open("identity.json", "r") as f:
+            identity = json.load(f)
+    except Exception as e:
+        print(f"Failed to load identity.json: {e}")
+        return
+
+    current_mission = identity.get("currentMission", "python-mission-1")
+    # Extract mission number from e.g. "python-mission-2" → "2"
+    match = re.search(r"(\d+)$", current_mission)
+    mission_num = match.group(1) if match else "1"
+    rubric_path = f"rubrics/mission-{mission_num}.json"
+
     try:
         with open("submissions/solution.py", "r") as f:
             code = f.read()
-        with open("rubrics/mission-2.json", "r") as f:
+        with open(rubric_path, "r") as f:
             rubric = json.load(f)
-        with open("identity.json", "r") as f:
-            identity = json.load(f)
     except Exception as e:
         print(f"File loading error: {e}")
         return
@@ -27,10 +39,10 @@ def run_review():
         syntax_error_msg = str(e).split(':', 1)[-1].strip()
 
     # --- 3. Setup AI Tokens ---
-    ai_token = os.environ.get("AI_TOKEN") 
+    ai_token = os.environ.get("AI_TOKEN")
     gh_token = os.environ.get("GH_TOKEN")
     url = "https://models.inference.ai.azure.com/chat/completions"
-    model_id = "gpt-4o-mini" 
+    model_id = "gpt-4o-mini"
 
     # --- 4. Logic Audit (Only if Syntax is OK) ---
     if syntax_passed:
@@ -55,7 +67,11 @@ def run_review():
             "temperature": 0.0
         }).encode("utf-8")
 
-        req = urllib.request.Request(url, data=payload, headers={"Authorization": f"Bearer {ai_token}", "Content-Type": "application/json"}, method="POST")
+        req = urllib.request.Request(
+            url, data=payload,
+            headers={"Authorization": f"Bearer {ai_token}", "Content-Type": "application/json"},
+            method="POST"
+        )
         try:
             with urllib.request.urlopen(req) as resp:
                 response_data = json.loads(resp.read().decode("utf-8"))
@@ -73,7 +89,7 @@ def run_review():
             "results": [{"req": "Valid Python Syntax", "pass": False, "feedback": "Fix your colons or indentation!"}]
         }
 
-    # --- 5. Format GitHub Message ---
+    # --- 5. Format GitHub Issue Comment ---
     passed = result.get("allPass", False)
     status = "✅ PASSED" if passed else "❌ TRY AGAIN"
     comment_body = f"## {status}\n\n> {result.get('message', 'Keep going!')}\n\n"
@@ -81,43 +97,108 @@ def run_review():
         icon = "✅" if r["pass"] else "❌"
         comment_body += f"{icon} **{r['req']}**: {r['feedback']}\n"
 
-    # --- 6. GitHub Posting & Rewards ---
+    if passed:
+        comment_body += f"\n\n🗺️ **[→ View your unlocked missions on the Skill Map](https://misha6l.github.io/codequest-python-testkid/map.html)**"
+
+    # --- 6. Write feedback.md to repo ---
+    try:
+        hero_name = identity.get("name", "Coder")
+        feedback_lines = [
+            f"# 🤖 CodeQuest AI Review — Mission {mission_num}\n",
+            f"**Hero:** {hero_name}  \n",
+            f"**Status:** {status}\n\n",
+            f"> {result.get('message', '')}\n\n",
+            "## Checklist\n\n"
+        ]
+        for r in result.get("results", []):
+            icon = "✅" if r["pass"] else "❌"
+            feedback_lines.append(f"- {icon} **{r['req']}**  \n  {r['feedback']}\n")
+
+        if passed:
+            feedback_lines.append(
+                f"\n---\n\n"
+                f"## 🎉 YOU PASSED!\n\n"
+                f"Your new missions are unlocked. Head to your Skill Map:\n\n"
+                f"👉 **[Open Skill Map](https://misha6l.github.io/codequest-python-testkid/map.html)**\n"
+            )
+        else:
+            feedback_lines.append(
+                f"\n---\n\n"
+                f"Fix the ❌ items above, save your file, and sync again. You've got this! 💪\n"
+            )
+
+        with open("feedback.md", "w") as f:
+            f.writelines(feedback_lines)
+        print("feedback.md written.")
+    except Exception as e:
+        print(f"Error writing feedback.md: {e}")
+
+    # --- 7. GitHub Issue Posting ---
     repo = os.environ.get("REPO")
-    gh_headers = {"Authorization": f"Bearer {gh_token}", "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
+    gh_headers = {
+        "Authorization": f"Bearer {gh_token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+    }
 
     try:
         issues_url = f"https://api.github.com/repos/{repo}/issues?state=all"
         with urllib.request.urlopen(urllib.request.Request(issues_url, headers=gh_headers)) as resp:
             issues = json.loads(resp.read())
-        
-        issue_num = next((i["number"] for i in issues if "mission 2" in i["title"].lower() or "loop" in i["title"].lower()), None)
+
+        # Match issue by mission number keyword
+        mission_keywords = [f"mission {mission_num}", f"mission-{mission_num}"]
+        issue_num = None
+        for issue in issues:
+            title_lower = issue["title"].lower()
+            if any(kw in title_lower for kw in mission_keywords):
+                issue_num = issue["number"]
+                break
 
         if issue_num:
             post_url = f"https://api.github.com/repos/{repo}/issues/{issue_num}/comments"
-            urllib.request.urlopen(urllib.request.Request(post_url, data=json.dumps({"body": comment_body}).encode(), headers=gh_headers, method="POST"))
-            
-            if passed:
-                patch_url = f"https://api.github.com/repos/{repo}/issues/{issue_num}"
-                urllib.request.urlopen(urllib.request.Request(patch_url, data=json.dumps({"state": "closed"}).encode(), headers=gh_headers, method="PATCH"))
-                
-                identity["xp"] += rubric.get("xpReward", 0)
-                if rubric["badge"] not in identity["badges"]:
-                    identity["badges"].append(rubric["badge"])
-                with open("identity.json", "w") as f:
-                    json.dump(identity, f, indent=2)
-            else:
-                patch_url = f"https://api.github.com/repos/{repo}/issues/{issue_num}"
-                urllib.request.urlopen(urllib.request.Request(patch_url, data=json.dumps({"state": "open"}).encode(), headers=gh_headers, method="PATCH"))
+            urllib.request.urlopen(urllib.request.Request(
+                post_url,
+                data=json.dumps({"body": comment_body}).encode(),
+                headers=gh_headers, method="POST"
+            ))
+
+            patch_url = f"https://api.github.com/repos/{repo}/issues/{issue_num}"
+            new_state = "closed" if passed else "open"
+            urllib.request.urlopen(urllib.request.Request(
+                patch_url,
+                data=json.dumps({"state": new_state}).encode(),
+                headers=gh_headers, method="PATCH"
+            ))
 
     except Exception as e:
         print(f"GitHub Error: {e}")
 
-    # --- 7. NEW: Update Dashboard Data (CRITICAL) ---
-    # This writes the AI results to the file the website actually reads.
+    # --- 8. Update Identity on Pass ---
+    if passed:
+        identity["xp"] = identity.get("xp", 0) + rubric.get("xpReward", 0)
+        badge = rubric.get("badge", "")
+        if badge and badge not in identity.get("badges", []):
+            identity["badges"].append(badge)
+
+        completed = identity.get("completedMissions", [])
+        if current_mission not in completed:
+            completed.append(current_mission)
+        identity["completedMissions"] = completed
+
+        # Advance to next mission number
+        next_num = int(mission_num) + 1
+        identity["currentMission"] = f"python-mission-{next_num}"
+
+        with open("identity.json", "w") as f:
+            json.dump(identity, f, indent=2)
+        print(f"Identity updated. Mission {mission_num} complete. Next: python-mission-{next_num}")
+
+    # --- 9. Update Dashboard Data ---
     try:
         with open("last_results.json", "w") as f:
             json.dump(result, f, indent=2)
-        print("Dashboard data updated successfully.")
+        print("Dashboard data updated.")
     except Exception as e:
         print(f"Error updating dashboard JSON: {e}")
 
