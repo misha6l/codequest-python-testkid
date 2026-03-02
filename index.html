@@ -15,13 +15,10 @@
                 <p>RANK: <span id="rank-val">Cadet</span></p>
             </div>
         </header>
-
         <main>
             <section id="terminal">
-                <ul id="checklist">
-                    </ul>
+                <ul id="checklist"></ul>
             </section>
-
             <section id="next-assignment" class="hidden">
                 <hr>
                 <h2>CHOOSE YOUR PATH: MISSION 3</h2>
@@ -41,10 +38,36 @@
                 </div>
             </section>
         </main>
-
         <button onclick="window.location.href='map.html'" class="map-btn">VIEW SKILL MAP</button>
     </div>
 
     <script src="script.js"></script>
+
+    <script>
+        // ─── AUTO-POLLING: checks last_results.json every 8 seconds ───
+        // When the AI bot pushes allPass:true, this redirects automatically.
+
+        const BASE = 'https://misha6l.github.io/codequest-python-testkid/';
+        let lastKnownPass = false;
+
+        function checkResults() {
+            fetch('last_results.json?v=' + Date.now())
+                .then(r => r.json())
+                .then(data => {
+                    if (data.allPass === true && !lastKnownPass) {
+                        lastKnownPass = true;
+                        // Small delay so the page feels responsive, then redirect
+                        setTimeout(() => {
+                            window.location.href = BASE + 'pass.html';
+                        }, 1200);
+                    }
+                })
+                .catch(() => {}); // silently ignore network errors
+        }
+
+        // Run once immediately, then every 8 seconds
+        checkResults();
+        setInterval(checkResults, 8000);
+    </script>
 </body>
 </html>
