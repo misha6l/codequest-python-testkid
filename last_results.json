@@ -23,7 +23,7 @@
     {
       "req": "Script has at least 10 lines of code",
       "pass": false,
-      "feedback": "The script does not have 10 lines of executable code; it only has 7 lines of actual code."
+      "feedback": "The script does not have at least 10 lines of executable code; it only has 7 lines of actual code."
     }
   ],
   "allPass": false,
