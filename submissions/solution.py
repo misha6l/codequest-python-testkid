@@ -1,20 +1,16 @@
-def check_power():
-    print("Power level stable.")
-    print("Hello how are you")
-    print("extra line")
-    print("extra line")
-    print("extra line")
-    print("extra line")
-    PRINT("extra line")
-    
+def check_power(level):
+    if level > 5:
+        print("ATTACK! Power level is high!")
+    else:
+        print("DEFEND! Power level is low.")
 
-
-for i in range(1, 11):
+for i in range(10):
+    check_power(i)
+    print(f"Checking level {i}")
     if i > 5:
-        print(f"High power at {i}")
-    check_power()
-    
+        print("Warning: level exceeded!")
+    else:
+        print("Level is safe.")
 
-# Extra lines to reach the 10-line requirement
-# line 11
-# line 12
+print("All levels checked!")
+print("Mission complete!")
