@@ -3,7 +3,7 @@ name: CodeQuest AI Reviewer
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   review:
@@ -24,15 +24,13 @@ jobs:
       - name: Run AI Review
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AI_TOKEN: ${{ secrets.GH_TOKEN }} 
+          AI_TOKEN: ${{ secrets.GH_TOKEN }}
           REPO: ${{ github.repository }}
-        # MOVED: Now points to the root instead of the workflows folder
         run: python review.py
 
-      - name: Commit Progress
+      - name: Commit Progress & Feedback
         run: |
           git config user.name "CodeQuest Bot"
           git config user.email "bot@codequest.dev"
-          # ADDED: This ensures the website data (last_results.json) is saved
-          git add identity.json last_results.json
-          git diff --staged --quiet || (git commit -m "Bot: updated student progress and dashboard" && git push)
+          git add identity.json last_results.json feedback.md
+          git diff --staged --quiet || (git commit -m "🤖 Bot: updated progress + feedback" && git push)
