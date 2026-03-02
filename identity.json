@@ -5,12 +5,13 @@
   "avatar": "\ud83e\uddfd",
   "track": "python",
   "level": 1,
-  "xp": 2550,
+  "xp": 2750,
   "streak": 1,
   "lastActive": "2026-02-26",
-  "currentMission": "python-mission-2",
+  "currentMission": "python-mission-3",
   "completedMissions": [
-    "python-mission-1"
+    "python-mission-1",
+    "python-mission-2"
   ],
   "badges": [
     "\ud83e\uddee Calculator Kid",

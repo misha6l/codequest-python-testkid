@@ -1,22 +1,26 @@
 # 🤖 CodeQuest AI Review — Mission 2
 **Hero:** TestKid  
-**Status:** ❌ TRY AGAIN
+**Status:** ✅ PASSED
 
-> The code meets 4 out of 5 mandatory criteria. Please ensure there are at least 10 lines of executable code.
+> All mandatory pass criteria are met.
 
 ## Checklist
 
 - ✅ **Uses a for loop**  
-  The code uses a for loop to iterate from 1 to 10.
+  The code uses a for loop to iterate through a range of numbers.
 - ✅ **Uses an if statement inside the loop**  
-  The code contains an if statement that checks if 'i' is greater than 5.
+  The code contains an if statement inside the for loop to check the value of 'i'.
 - ✅ **Defines at least one function with def**  
-  The code defines a function named 'check_power'.
+  The code defines a function 'check_power' using the 'def' keyword.
 - ✅ **Uses print() to display output**  
-  The code uses print() multiple times to display output.
-- ❌ **Script has at least 10 lines of code**  
-  The script does not have at least 10 lines of executable code; it only has 7 lines of actual code.
+  The code uses print() statements to display various outputs.
+- ✅ **Script has at least 10 lines of code**  
+  The script contains more than 10 lines of code.
 
 ---
 
-Fix the ❌ items above, save your file, and sync again. You've got this! 💪
+## 🎉 YOU PASSED!
+
+Your new missions are unlocked. Head to your Skill Map:
+
+👉 **[Open Skill Map](https://misha6l.github.io/codequest-python-testkid/map.html)**
