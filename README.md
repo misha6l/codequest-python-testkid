@@ -28,7 +28,7 @@
 4. The 🤖 AI reviewer checks it automatically
 5. Check back for feedback in the Issue comments
 6. Fix anything needed and push again
-7. Pass all requirements → earn your badge → next mission unlocks!
+7. Pass all requirements → earn your badge → next mission unlocks! RANDOM EDIITTTTJTNGJNT
 
 ---
 
